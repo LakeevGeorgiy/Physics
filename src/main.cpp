@@ -13,16 +13,18 @@
 
 int main() {
 
-    const double kRadius = 4;
-    const double kWeight = 1;
-    const double kLength = 9.f / 6 * std::numbers::pi * kRadius;
-    const double kG = 9.8;
-    const double kMu = 0.05;
-    double speed = 14;
+    float kRadius = 4;
+    float kWeight = 1;
+    float alpha = 0;
+    float kLength = 0* std::numbers::pi * kRadius;
+    float kG = 9.8;
+    float kMu = 0.05;
+    float speed = 14;
+    bool start = false;
     bool end = false;
 
-    CircularArc arc(kRadius, kLength);
-    DeadLoop deadLoop(kRadius, kWeight, kLength, kG, kMu, speed);
+    CircularArc arc(0, 0);
+    DeadLoop deadLoop(0, 0, 0, 0, 0, 0);
 
     const int windowWidth = 1280;
     const int windowHeight = 720;
@@ -34,13 +36,6 @@ int main() {
 
     sf::CircleShape shape(10.f);
     shape.setFillColor(sf::Color::Green);
-
-    sf::CircleShape background(210.f);
-    background.setFillColor(sf::Color::Black);
-    background.setPosition(440, 100);
-    sf::CircleShape foreground(210.f);
-    foreground.setFillColor(sf::Color::White);
-    foreground.setPosition(444, 100);
 
 
     sf::Clock deltaClock;
@@ -54,7 +49,7 @@ int main() {
             }
         }
 
-        if (!deadLoop.Check()){
+        if (start && !deadLoop.Check()){
             end = true;
         }
         if (end){
@@ -62,14 +57,30 @@ int main() {
             /*if (arc.Collision(deadLoop.GetCoordinates()))
                 deadLoop.ChangeDirectory();*/
         }
-        else deadLoop.ForwardIteration();
+        else if (start) deadLoop.ForwardIteration();
 
-        shape.setPosition(deadLoop.GetCoordinates());
+        if (start || end) shape.setPosition(deadLoop.GetCoordinates());
         ImGui::SFML::Update(window, deltaClock.restart());
 
+        ImGui::Begin("Start");
+        ImGui::SliderFloat("Weight", &kWeight, 0, 100, "%.3f", 0);
+        ImGui::SliderFloat("Radius", &kRadius, 0, 100, "%.3f", 0);
+        ImGui::SliderFloat("Alpha", &alpha, 0, 3 * std::numbers::pi / 2, "%.3f", 0);
+        ImGui::SliderFloat("Mu", &kMu, 0, 1, "%.3f", 0);
+        ImGui::SliderFloat("Speed", &speed, 0, 100, "%.3f", 0);
+        if (ImGui::Button("Start")){
+            start = true;
+            kLength = alpha * kRadius;
+            arc = CircularArc(kRadius, kLength);
+            deadLoop = DeadLoop(kRadius, kWeight, kLength, kG, kMu, speed);
+        }
+        ImGui::End();
+
         window.clear();
-        window.draw(shape);
-        window.draw(arc.getArray());
+        if (start || end) {
+            window.draw(shape);
+            window.draw(arc.getArray());
+        }
         ImGui::SFML::Render(window);
         window.display();
     }

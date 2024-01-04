@@ -22,6 +22,14 @@ public:
         _radius = radius;
     }
 
+    void setLength(float length){
+        _length = length;
+    }
+
+    void setAngle(){
+        _angle = _length / _radius;
+    }
+
     std::size_t getPointCount() const {
         return _cntPoints;
     }

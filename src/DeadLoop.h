@@ -3,11 +3,11 @@
 class DeadLoop{
 private:
 
-    const double kRadius;
-    const double kWeight = 1;
-    const double kLength = 5.f / 6 * std::numbers::pi * kRadius;
-    const double kG = 9.8;
-    const double kMu = 0.05;
+    double kRadius;
+    double kWeight = 1;
+    double kLength = 5.f / 6 * std::numbers::pi * kRadius;
+    double kG = 9.8;
+    double kMu = 0.05;
 
     double x = 0;
     double y = 0;
