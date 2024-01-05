@@ -11,20 +11,44 @@
 #include "CircularArc.h"
 #include "DeadLoop.h"
 
+bool Simulation(StartSettings settings){
+    DeadLoop deadLoop(settings);
+    while (deadLoop.Check()){
+        deadLoop.ForwardIteration();
+    }
+    return deadLoop.Success();
+}
+
+double FindSolution(StartSettings settings){
+    double left = 0;
+    double right = 100;
+    while (left + 0.001 < right){
+        double mid = (left + right) / 2;
+        settings.speed = mid;
+        if (Simulation(settings))
+            right = mid;
+        else
+            left = mid;
+    }
+    return right;
+}
+
 int main() {
 
-    float kRadius = 4;
-    float kWeight = 1;
-    float alpha = 0;
-    float kLength = 0* std::numbers::pi * kRadius;
+    float kRadius = 5;
+    float kWeight = 3;
+    float alpha = 4 * std::numbers::pi / 6;
+    float kLength = 0;
     float kG = 9.8;
-    float kMu = 0.05;
+    float kMu = 0.03;
     float speed = 14;
     bool start = false;
     bool end = false;
+    float solution = 0;
+    StartSettings settings{kRadius, kWeight, kLength, kG, kMu, speed};
 
-    CircularArc arc(0, 0);
-    DeadLoop deadLoop(0, 0, 0, 0, 0, 0);
+    CircularArc arc(kRadius, kLength);
+    DeadLoop deadLoop(settings);
 
     const int windowWidth = 1280;
     const int windowHeight = 720;
@@ -63,17 +87,23 @@ int main() {
         ImGui::SFML::Update(window, deltaClock.restart());
 
         ImGui::Begin("Start");
-        ImGui::SliderFloat("Weight", &kWeight, 0, 100, "%.3f", 0);
-        ImGui::SliderFloat("Radius", &kRadius, 0, 100, "%.3f", 0);
+        ImGui::SliderFloat("Weight", &settings.weight, 0, 10, "%.3f", 0);
+        ImGui::SliderFloat("Radius", &settings.radius, 0, 10, "%.3f", 0);
         ImGui::SliderFloat("Alpha", &alpha, 0, 3 * std::numbers::pi / 2, "%.3f", 0);
-        ImGui::SliderFloat("Mu", &kMu, 0, 1, "%.3f", 0);
-        ImGui::SliderFloat("Speed", &speed, 0, 100, "%.3f", 0);
+        ImGui::SliderFloat("Mu", &settings.mu, 0, 1, "%.3f", 0);
+        ImGui::SliderFloat("Speed", &settings.speed, 0, 100, "%.3f", 0);
         if (ImGui::Button("Start")){
             start = true;
-            kLength = alpha * kRadius;
-            arc = CircularArc(kRadius, kLength);
-            deadLoop = DeadLoop(kRadius, kWeight, kLength, kG, kMu, speed);
+            end = false;
+            settings.length = alpha * settings.radius;
+            arc = CircularArc(settings.radius, settings.length);
+            deadLoop = DeadLoop(settings);
         }
+        if (ImGui::Button("FindSpeed")){
+            settings.length = alpha * settings.radius;
+            solution = FindSolution(settings);
+        }
+        ImGui::InputFloat("Speed", &solution);
         ImGui::End();
 
         window.clear();

@@ -1,14 +1,20 @@
 #pragma once
 
+struct StartSettings{
+    float radius;
+    float weight;
+    float length;
+    float g;
+    float mu;
+    float speed;
+};
+
 class DeadLoop{
 private:
 
-    double kRadius;
-    double kWeight = 1;
-    double kLength = 5.f / 6 * std::numbers::pi * kRadius;
-    double kG = 9.8;
-    double kMu = 0.05;
+    StartSettings settings;
 
+    double kG = 9.8;
     double x = 0;
     double y = 0;
     double speed = 10;
@@ -29,24 +35,24 @@ private:
 
 public:
 
-    DeadLoop(double radius, double weight, double length, double g, double mu, double speed)
-        : kRadius(radius), kWeight(weight), kLength(length), kG(g), kMu(mu), speed(speed)
-    { }
+    DeadLoop(StartSettings set) : settings(set) {
+        speed = settings.speed;
+    }
 
     void ChangeCoordinates(){
-        x = kRadius * cos(l / kRadius + xOffset);
-        y = kRadius * sin(l / kRadius + yOffset) + kRadius;
+        x = settings.radius * cos(l / settings.radius + xOffset);
+        y = settings.radius * sin(l / settings.radius + yOffset) + settings.radius;
     }
 
     void ChangeAcceleration(){
-        yAcceleration = pow(speed, 2) / kRadius;
-        xAcceleration = -(kMu * kG * (kRadius - y) + kMu * speed + kG * (x)) / kRadius;
+        yAcceleration = pow(speed, 2) / settings.radius;
+        xAcceleration = -(settings.mu * kG * (settings.radius - y) + settings.mu * speed + kG * (x)) / settings.radius;
     }
 
     void ChangeSpeed(){
         speed += xAcceleration * dt;
-        xSpeed = speed * cos(l / kRadius);
-        ySpeed = speed * sin(l / kRadius);
+        xSpeed = speed * cos(l / settings.radius);
+        ySpeed = speed * sin(l / settings.radius);
     }
 
     void MoveForward(){
@@ -54,7 +60,11 @@ public:
     }
 
     bool Check(){
-        return speed > 0 && kWeight * (yAcceleration + kG * (kRadius - y) / kRadius) > 0 && l < kLength;
+        return speed > 0 && settings.weight * (yAcceleration + kG * (settings.radius - y) / settings.radius) > 0 && l < settings.length;
+    }
+
+    bool Success(){
+        return l >= settings.length;
     }
 
     void ForwardIteration() {
@@ -76,7 +86,7 @@ public:
     }
 
     sf::Vector2f GetCoordinates(){
-        return sf::Vector2f(x * 50 + xBeginPos, y * 50 + yBeginPos);
+        return sf::Vector2f(x / settings.radius * 200 + xBeginPos, (y - settings.radius) / settings.radius * 200 + yBeginPos + 200);
     }
 
     void ChangeDirectory(){
