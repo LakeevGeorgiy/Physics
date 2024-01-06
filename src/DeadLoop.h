@@ -27,7 +27,7 @@ private:
 
     long double dt = pow(10, -2);
     double xOffset = -std::numbers::pi / 2;
-    double yOffset = std::numbers::pi / 2;
+    double yOffset = -std::numbers::pi / 2;
     double xBeginPos = 640;
     double yBeginPos = 100;
     double l = 0;
@@ -82,11 +82,11 @@ public:
 
     void BackwardIteration() {
         MoveBackward();
-        //std::cout << y << " " << ySpeed << " " << x << " " << xSpeed << "\n";
     }
 
     sf::Vector2f GetCoordinates(){
-        return sf::Vector2f(x / settings.radius * 200 + xBeginPos, (y - settings.radius) / settings.radius * 200 + yBeginPos + 200);
+        double temp = settings.radius * std::sin(l / settings.radius + std::numbers::pi / 2) + settings.radius;
+        return sf::Vector2f(x / settings.radius * 200 + xBeginPos, (temp - settings.radius) / settings.radius * 200 + yBeginPos + 200);
     }
 
     void ChangeDirectory(){
