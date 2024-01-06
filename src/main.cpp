@@ -76,11 +76,7 @@ int main() {
         if (start && !deadLoop.Check()){
             end = true;
         }
-        if (end){
-            deadLoop.BackwardIteration();
-            /*if (arc.Collision(deadLoop.GetCoordinates()))
-                deadLoop.ChangeDirectory();*/
-        }
+        if (end) deadLoop.BackwardIteration();
         else if (start) deadLoop.ForwardIteration();
 
         if (start || end) shape.setPosition(deadLoop.GetCoordinates());

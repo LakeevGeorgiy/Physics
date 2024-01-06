@@ -76,7 +76,7 @@ public:
 
     void MoveBackward(){
         ySpeed -= kG * dt;
-        y = y - ySpeed * dt + kG * pow(dt, 2) / 2;
+        y = y + ySpeed * dt - kG * pow(dt, 2) / 2;
         x += xSpeed * dt;
     }
 
@@ -85,7 +85,7 @@ public:
     }
 
     sf::Vector2f GetCoordinates(){
-        double temp = settings.radius * std::sin(l / settings.radius + std::numbers::pi / 2) + settings.radius;
+        double temp = 2 * settings.radius - y; // settings.radius * std::sin(l / settings.radius + std::numbers::pi / 2) + settings.radius;
         return sf::Vector2f(x / settings.radius * 200 + xBeginPos, (temp - settings.radius) / settings.radius * 200 + yBeginPos + 200);
     }
 
