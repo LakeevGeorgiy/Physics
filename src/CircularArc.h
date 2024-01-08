@@ -18,18 +18,6 @@ public:
         createLine();
     }
 
-    void setRadius(float radius){
-        _radius = radius;
-    }
-
-    void setLength(float length){
-        _length = length;
-    }
-
-    void setAngle(){
-        _angle = _length / _radius;
-    }
-
     std::size_t getPointCount() const {
         return _cntPoints;
     }
@@ -38,7 +26,6 @@ public:
         float angle = _angle * (float)index / (float)_cntPoints;
         float x = std::cos(angle - std::numbers::pi / 2);
         float y = std::sin(angle + std::numbers::pi / 2);
-        // std::cout << x * 50 + 642 << " " << y * 50 + 102 << "\n";
         return {x * 211 + 647, y * 215 + 310};
     }
 
@@ -53,13 +40,27 @@ public:
         return lines;
     }
 
-    bool Collision(sf::Vector2f coordinates){
-        double x = (coordinates.x - 647) / 211;
-        double y = (coordinates.y - 310) / 215;
-        double alpha = std::acos(x) + std::numbers::pi / 2;
-        double beta = std::asin(y) - std::numbers::pi / 2;
+	sf::Vector2f getCenterCoordinates() {
+		float angle = std::numbers::pi / 2;
+		float x = 0;
+		float y = 1;
+		return {x, y};
+	}
 
-        std::cout << (abs(1 - std::pow(std::cos(alpha), 2) + std::pow(std::sin(beta), 2)) < 1e3 && alpha > 0 && alpha < _angle) << "\n";
-        return abs(1 - std::pow(std::cos(alpha), 2) + std::pow(std::sin(beta), 2)) < 1e3 && alpha > 0 && alpha < _angle;
+	double distance(sf::Vector2f lhs, sf::Vector2f rhs){
+		return std::sqrt(std::pow((lhs.x - rhs.x), 2) + std::pow((lhs.y - rhs.y), 2));
+	}
+
+    bool Collision(sf::Vector2f coordinates, double r){
+        double x = (coordinates.x) / r;
+        double y = (coordinates.y) / r;
+		sf::Vector2f newCoordinates(x, y);
+		if (x < 0 || y < 0)
+			return false;
+
+		double l = std::sqrt(std::pow(x, 2) + std::pow(y, 2));
+		double gamma = std::acos((2 - std::pow(l, 2)) / 2);
+
+        return gamma >= 0 &&  gamma < std::numbers::pi / 2 && distance(getCenterCoordinates(), newCoordinates) >= 1.0f - pow(10, -3);
     }
 };

@@ -46,7 +46,7 @@ public:
 
     void ChangeAcceleration(){
         yAcceleration = pow(speed, 2) / settings.radius;
-        xAcceleration = -(settings.mu * kG * (settings.radius - y) + settings.mu * speed + kG * (x)) / settings.radius;
+        xAcceleration = -(settings.mu * kG * (settings.radius - y) + settings.mu * std::pow(speed, 2) + kG * (x)) / settings.radius;
     }
 
     void ChangeSpeed(){
@@ -90,7 +90,21 @@ public:
     }
 
     void ChangeDirectory(){
-        xSpeed *= -1;
-        ySpeed *= -1;
+		sf::Vector2f coordinates = GetCoordinates();
+		double x = (coordinates.x - 647) / 211;
+		double y = (coordinates.y - 310) / 215;
+		double alpha = std::acos(x) + std::numbers::pi / 2;
+		double beta = std::asin(y) - std::numbers::pi / 2;
+		yAcceleration = std::pow(speed, 2) / settings.radius;
+		xAcceleration = kG * std::cos(alpha) - settings.mu * yAcceleration - settings.mu * kG * std::sin(alpha);
+		std::cout << alpha / std::numbers::pi << " " << beta / std::numbers::pi << "\n";
+
+		x = settings.radius * cos(alpha + xOffset);
+		y = settings.radius * sin(beta + yOffset) + settings.radius;
+
+		speed += xAcceleration * dt;
+		xSpeed = speed * cos(alpha);
+		ySpeed = speed * sin(alpha);
+
     }
 };

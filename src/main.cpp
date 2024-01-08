@@ -10,13 +10,14 @@
 #include <cmath>
 #include "CircularArc.h"
 #include "DeadLoop.h"
+#include "CircularMotion.h"
 
 bool Simulation(StartSettings settings){
-    DeadLoop deadLoop(settings);
-    while (deadLoop.Check()){
-        deadLoop.ForwardIteration();
+    CircularMotion circularMotion(settings, 0, 0);
+    while (circularMotion.Check()){
+        circularMotion.ForwardIteration();
     }
-    return deadLoop.Success();
+    return circularMotion.Success();
 }
 
 double FindSolution(StartSettings settings){
@@ -37,22 +38,22 @@ int main() {
 
     float kRadius = 5;
     float kWeight = 3;
-    float alpha = 4 * std::numbers::pi / 6;
+    float alpha = 9 * std::numbers::pi / 6;
     float kLength = 0;
     float kG = 9.8;
-    float kMu = 0.03;
-    float speed = 14;
+    float kMu = 1;
+    float speed = 18.286;
     bool start = false;
     bool end = false;
     float solution = 0;
     StartSettings settings{kRadius, kWeight, kLength, kG, kMu, speed};
+	CircularMotion circularMotion(settings, 0, 0);
 
     CircularArc arc(kRadius, kLength);
-    DeadLoop deadLoop(settings);
 
     const int windowWidth = 1280;
     const int windowHeight = 720;
-    const int frameLimit = 60;
+    const int frameLimit = 120;
 
     sf::RenderWindow window(sf::VideoMode(windowWidth, windowHeight), "Simulation!");
     window.setFramerateLimit(frameLimit);
@@ -60,6 +61,7 @@ int main() {
 
     sf::CircleShape shape(10.f);
     shape.setFillColor(sf::Color::Green);
+	shape.setPosition(640, 300);
 
 
     sf::Clock deltaClock;
@@ -73,13 +75,32 @@ int main() {
             }
         }
 
-        if (start && !deadLoop.Check()){
+        if (!end && start && !circularMotion.Check()){
             end = true;
-        }
-        if (end) deadLoop.BackwardIteration();
-        else if (start) deadLoop.ForwardIteration();
+			circularMotion.AbsSpeed();
+		}
+		if (end) {
+			if (circularMotion.GetLength() >= 0 && !circularMotion.Success() && arc.Collision(circularMotion.GetCoordinates2(), settings.radius)) {
+				circularMotion.BackwardIteration();
+				if (circularMotion.GetDl() >= 0){
+					end = false;
+					start = false;
+				}
+			}
+			else{
+				circularMotion.Fall();
+			}
+			if (circularMotion.GetCoordinates().y > 720) {
+				end = false;
+				start = false;
+			}
+		}
+        else if (start) {
+			circularMotion.ForwardIteration();
+			settings.speed = circularMotion.CurrentSpeed();
+		}
 
-        if (start || end) shape.setPosition(deadLoop.GetCoordinates());
+        if (start || end) shape.setPosition(circularMotion.GetCoordinates());
         ImGui::SFML::Update(window, deltaClock.restart());
 
         ImGui::Begin("Start");
@@ -87,15 +108,17 @@ int main() {
         ImGui::SliderFloat("Radius", &settings.radius, 0, 10, "%.3f", 0);
         ImGui::SliderFloat("Alpha", &alpha, 0, 3 * std::numbers::pi / 2, "%.3f", 0);
         ImGui::SliderFloat("Mu", &settings.mu, 0, 1, "%.3f", 0);
-        ImGui::SliderFloat("Speed", &settings.speed, 0, 100, "%.3f", 0);
+        ImGui::SliderFloat("Speed", &speed, 0, 100, "%.3f", 0);
         if (ImGui::Button("Start")){
             start = true;
             end = false;
             settings.length = alpha * settings.radius;
+			settings.speed = speed;
             arc = CircularArc(settings.radius, settings.length);
-            deadLoop = DeadLoop(settings);
+			circularMotion = CircularMotion(settings, 0, 0);
         }
         if (ImGui::Button("FindSpeed")){
+			settings.speed = speed;
             settings.length = alpha * settings.radius;
             solution = FindSolution(settings);
         }
@@ -103,10 +126,8 @@ int main() {
         ImGui::End();
 
         window.clear();
-        if (start || end) {
-            window.draw(shape);
-            window.draw(arc.getArray());
-        }
+		window.draw(shape);
+        window.draw(arc.getArray());
         ImGui::SFML::Render(window);
         window.display();
     }
